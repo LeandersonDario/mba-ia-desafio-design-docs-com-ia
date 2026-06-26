@@ -14,12 +14,7 @@ A IA é sua ferramenta principal de produção neste desafio. Você vai usá-la 
 
 ## Estrutura do desafio
 
-O desafio tem duas partes, **ambas obrigatórias**:
-
-- **Parte 1 (Pacote de design docs):** produzir PRD, RFC, FDD, ADRs, Tracker e o README do processo a partir da transcrição e do código.
-- **Parte 2 (Documentação viva em HTML):** transformar o pacote em documentação que se mantém sincronizada com o código via IA. É a etapa final e mais técnica, e se constrói sobre a Parte 1.
-
-Conclua a Parte 1 antes de começar a Parte 2. Os requisitos e critérios de aceite numerados a seguir são da Parte 1; a Parte 2 tem seção e critérios próprios, mais adiante.
+O desafio consiste em produzir um **pacote de design docs**: PRD, RFC, FDD, ADRs, Tracker e o README do processo a partir da transcrição e do código.
 
 ## Objetivo
 
@@ -31,7 +26,6 @@ Entregar, em um repositório público no GitHub (fork do repositório base), o s
 - Entre 5 e 8 ADRs (Architecture Decision Records) das decisões discutidas
 - Tracker de rastreabilidade ligando cada item à origem na transcrição ou no código
 - README atualizado documentando o processo de produção
-- Documentação renderizada em HTML, com mecanismo de auto-atualização ancorado no código (Parte 2)
 
 Toda informação registrada nos documentos deve ser rastreável à transcrição ou ao código fonte da aplicação. Não é permitido inventar requisitos, decisões ou restrições sem origem identificável.
 
@@ -71,7 +65,7 @@ Liberdade total na escolha de ferramentas de IA. Você pode usar qualquer combin
 
 Os documentos devem ser entregues em formato Markdown.
 
-Na **Parte 1**, a entrega é puramente documental: você não deve mexer no código da aplicação (`src/`, `prisma/`, `tests/`, configurações). O código serve de contexto e referência. A **Parte 2** tem uma exceção controlada e fornecida pelo próprio desafio (descrita na seção dela) e libera a criação de *tooling de documentação* (scripts, GitHub Actions, prompts, gerador de HTML), que não é código da aplicação.
+A entrega é puramente documental: você não deve mexer no código da aplicação (`src/`, `prisma/`, `tests/`, configurações). O código serve de contexto e referência.
 
 ## Requisitos
 
@@ -242,105 +236,28 @@ A entrega é avaliada contra os critérios abaixo. Todos são obrigatórios.
 
 ---
 
-## Parte 2: Documentação Viva em HTML
-
-> Esta é a etapa final do desafio e a mais técnica. Ela se constrói sobre o pacote da Parte 1, então só comece depois que a Parte 1 estiver completa e consistente.
-
-### Objetivo
-
-Design docs envelhecem: o código muda e os documentos ficam para trás. Nesta parte você vai construir um mecanismo que mantém a documentação sincronizada com o código usando IA. O entregável tem **três artefatos concretos** e uma **demonstração**, descritos abaixo com exatidão; não há margem para interpretação sobre o que é esperado.
-
-### Artefato 1: Documentação em HTML (`docs/site/`)
-
-Uma versão navegável em HTML do pacote da Parte 1, em `docs/site/`:
-
-- Gerada a partir dos arquivos Markdown da Parte 1 por um comando reproduzível (não escrita à mão).
-- Cobre os cinco documentos: PRD, RFC, FDD, ADRs e Tracker, navegáveis entre si.
-- Exibe de forma visível o hash do commit de origem (o mesmo do Artefato 2).
-
-### Artefato 2: Metadado de sincronização (`docs/site/docs-meta.json`)
-
-Um arquivo JSON versionado que registra de qual ponto do código a documentação foi gerada. Campos obrigatórios:
-
-```json
-{
-  "source_commit": "<hash completo do HEAD no momento da geração>",
-  "generated_at": "<timestamp ISO 8601>",
-  "documents": ["docs/PRD.md", "docs/RFC.md", "docs/FDD.md", "docs/adrs/", "docs/TRACKER.md"]
-}
-```
-
-O `source_commit` é a âncora de sincronização: ele afirma "esta documentação reflete o código neste commit".
-
-### Artefato 3: Mecanismo de auto-atualização
-
-Um **único ponto de entrada reproduzível** (um script, ex.: `npm run docs:update`, **ou** um GitHub Action) com o código versionado no repositório. O contrato é fixo e deve executar exatamente estas etapas:
-
-| Etapa | O que faz |
-| --- | --- |
-| 1. Lê a âncora | Lê `source_commit` de `docs/site/docs-meta.json` |
-| 2. Calcula o delta | Roda `git diff <source_commit>..HEAD` para descobrir os arquivos de código alterados |
-| 3. Direciona pelo Tracker | Usa as linhas do Tracker com Fonte = `CODIGO` para mapear arquivos alterados → itens de documento afetados |
-| 4. Atualiza com IA | Envia à IA apenas os trechos afetados + o diff, e aplica as atualizações nos Markdown correspondentes |
-| 5. Regenera e re-ancora | Regera o HTML e grava `source_commit = HEAD` em `docs-meta.json` |
-
-A etapa 3 é o que diferencia este mecanismo de uma regeneração cega: ele só mexe no que o código alterado de fato impacta. Documente, junto ao mecanismo, o comando exato para executá-lo.
-
-### Demonstração obrigatória (é assim que a Parte 2 é avaliada)
-
-Você prova o mecanismo rodando-o sobre uma mudança de código **conhecida**, fornecida em `fase-2/`: uma nova transição na máquina de estados de pedidos, `SHIPPED → CANCELLED` (detalhes em `fase-2/README.md`). Crie uma seção **"Demonstração da Parte 2"** no README do processo registrando, nesta ordem:
-
-1. **Estado inicial**: o `source_commit` gravado antes da mudança.
-2. **A mudança**: a saída de `git apply fase-2/order-status-change.patch` e o commit resultante.
-3. **A execução**: o comando que disparou o mecanismo e o log/saída dele.
-4. **O resultado**: o diff dos documentos atualizados (trechos antes/depois) e o novo `source_commit`.
-
-Como a mudança é conhecida, o resultado esperado é objetivo: depois da execução, os documentos precisam refletir que **um pedido `SHIPPED` agora pode ser `CANCELLED`**. Concretamente, ao menos o fluxo/contrato no FDD e o ADR da máquina de estados (e o evento/payload correspondente) devem mencionar essa nova transição, e nenhum documento pode continuar afirmando que `SHIPPED` só vai para `DELIVERED`.
-
-### Sobre a regra de não alterar o código
-
-Aplicar o changeset da fase 2 é a **única** alteração de código permitida no desafio, é sancionada e fornecida por ele, e existe só para servir de gatilho desta demonstração. Fora isso, o código da aplicação (`src/`, `prisma/`, `tests/`) permanece intocado. Criar o tooling de documentação (gerador de HTML, script/Action de atualização, prompts) é parte esperada desta etapa.
-
-### Critérios de Aceite da Parte 2
-
-- ☐ `docs/site/` contém um HTML navegável gerado a partir dos Markdown da Parte 1, cobrindo PRD, RFC, FDD, ADRs e Tracker
-- ☐ O HTML exibe de forma visível o hash do commit de origem
-- ☐ `docs/site/docs-meta.json` existe e contém `source_commit` (hash real do repositório), `generated_at` e a lista de documentos
-- ☐ O código do mecanismo de atualização está versionado e tem um ponto de entrada reproduzível e documentado (script ou Action)
-- ☐ O mecanismo usa `git diff <source_commit>..HEAD` e o Tracker para direcionar a atualização, em vez de regenerar todos os documentos
-- ☐ A seção "Demonstração da Parte 2" no README registra os quatro itens exigidos (estado inicial, mudança, execução, resultado), com diffs e saídas reais
-- ☐ Após a demonstração, os documentos refletem a transição `SHIPPED → CANCELLED` e o `source_commit` gravado é igual ao commit que aplicou o changeset
-
----
-
 ## Estrutura obrigatória do entregável
 
 ```
 .
 ├── README.md                              (substituído pelo aluno)
 ├── TRANSCRICAO.md                         (não alterar)
-├── fase-2/                                (changeset da Parte 2, fornecido pelo desafio)
-│   ├── README.md
-│   └── order-status-change.patch
 ├── docs/
 │   ├── PRD.md                             (preenchido pelo aluno)
 │   ├── RFC.md                             (preenchido pelo aluno)
 │   ├── FDD.md                             (preenchido pelo aluno)
 │   ├── TRACKER.md                         (preenchido pelo aluno)
-│   ├── adrs/
-│   │   ├── ADR-001-titulo-curto.md
-│   │   ├── ADR-002-titulo-curto.md
-│   │   ├── ADR-003-titulo-curto.md
-│   │   ├── ADR-004-titulo-curto.md
-│   │   ├── ADR-005-titulo-curto.md
-│   │   └── ... (até 8 ADRs)
-│   └── site/                              (Parte 2: HTML + docs-meta.json, gerados pelo aluno)
-│       ├── index.html
-│       └── docs-meta.json
-├── src/                                   (não alterar, exceto o changeset da fase 2, na Parte 2)
+│   └── adrs/
+│       ├── ADR-001-titulo-curto.md
+│       ├── ADR-002-titulo-curto.md
+│       ├── ADR-003-titulo-curto.md
+│       ├── ADR-004-titulo-curto.md
+│       ├── ADR-005-titulo-curto.md
+│       └── ... (até 8 ADRs)
+├── src/                                   (não alterar)
 ├── prisma/                                (não alterar)
 ├── tests/                                 (não alterar)
-└── ... (demais arquivos do boilerplate; o mecanismo de atualização da Parte 2, script ou Action, é versionado pelo aluno)
+└── ... (demais arquivos do boilerplate)
 ```
 
 A entrega deve ser feita como repositório público no GitHub, a partir de fork do repositório base do desafio.
@@ -349,7 +266,7 @@ A entrega deve ser feita como repositório público no GitHub, a partir de fork 
 
 O repositório base do desafio contém a aplicação completa, a transcrição e a estrutura de pastas pra você preencher:
 
-`<link-do-repositorio-base-aqui>`
+https://github.com/devfullcycle/mba-ia-desafio-design-docs-com-ia
 
 ## Ordem de execução sugerida
 
@@ -363,7 +280,6 @@ O repositório base do desafio contém a aplicação completa, a transcrição e
 8. **README do processo**: deixe por último, quando o processo já está completo e você pode documentá-lo com clareza.
 9. **Revisão final**: passe pela checklist de critérios de aceite item por item antes do push final.
 10. **Itere**: é esperado que o processo demande 3 a 5 ciclos de geração, revisão crítica, ajuste de prompt e nova geração. Se você gerou tudo de primeira sem ajustes, os documentos provavelmente estão genéricos demais.
-11. **Parte 2 (Documentação viva)**: depois da Parte 1 fechada, renderize o pacote em HTML, monte o mecanismo de auto-atualização e rode a demonstração com o changeset da fase 2.
 
 ## Dicas Finais
 
@@ -373,6 +289,6 @@ O tracker é seu melhor aliado contra alucinações da IA. Se você não consegu
 
 Cuidado com o que NÃO entra na documentação. A reunião descarta explicitamente algumas ideias. Se essas coisas aparecerem como requisito nos seus documentos, é sinal de que a IA não está sendo cuidadosa com o que você pediu.
 
-Na Parte 1, a restrição de não alterar o código da aplicação é absoluta: o código serve de contexto e referência, e o entregável é puramente documental. A única exceção em todo o desafio é o changeset sancionado da fase 2, aplicado apenas na Parte 2.
+A restrição de não alterar o código da aplicação é absoluta: o código serve de contexto e referência, e o entregável é puramente documental.
 
 Itere bastante. Os primeiros documentos que a IA gerar provavelmente serão superficiais ou redundantes. Volte com correções, peça refinamento de pontos específicos, peça para remover trechos vagos, peça exemplos concretos. O resultado final deve parecer escrito por alguém que pensou no problema com a IA ao lado, não por alguém que copiou e colou da transcrição.
