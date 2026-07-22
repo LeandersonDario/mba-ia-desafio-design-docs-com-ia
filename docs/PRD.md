@@ -47,7 +47,7 @@ Cenários de uso:
 |---|---|---|---|
 | Notificar mudanças de status em "tempo real" | Latência entre mudança de status e recebimento pelo cliente (p95) | **< 10 segundos** | [09:02] Marcos; [09:09–09:10] Diego/Marcos |
 | Entregar mesmo com indisponibilidade temporária do cliente | Eventos entregues automaticamente dentro da janela de retry | Entrega automática para indisponibilidades de até **~15h** (5 tentativas, backoff 1m/5m/30m/2h/12h) | [09:17] Diego/Larissa |
-| Reter os clientes solicitantes | Adoção pelos 3 clientes (Atlas, MaxDistribuição, Nova Cargo) | 3 de 3 integrados **antes do fim do trimestre** | [09:00] Marcos |
+| Reter os clientes solicitantes | Adoção pelos 3 clientes (Atlas, MaxDistribuição, Nova Cargo) | 3 de 3 integrados **antes do fim do trimestre** (meta editorial derivada — a reunião registra a ameaça de churn da Atlas nesse prazo) | [09:00] Marcos |
 | Reduzir o custo de integração dos clientes | Volume de polling no `GET /orders` pelos clientes integrados | Redução observável após adoção (meta qualitativa, derivada do problema relatado) | derivado de [09:00] Marcos |
 
 ## 5. Escopo

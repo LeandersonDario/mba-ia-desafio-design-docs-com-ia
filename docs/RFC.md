@@ -16,7 +16,7 @@ Propomos notificar sistemas de clientes B2B a cada mudança de status de pedido 
 
 Três clientes B2B — Atlas Comercial, MaxDistribuição e Nova Cargo — pediram formalmente notificação em "tempo real" (definido por eles como **menos de 10 segundos** — [09:02] Marcos) quando o status de seus pedidos muda. Hoje eles fazem polling no `GET /orders` "de tempos em tempos", o que deixa a integração "lenta e cara"; a Atlas sinalizou que pode migrar para o concorrente se isso não for entregue até o fim do trimestre ([09:00] Marcos).
 
-O OMS atual (Node.js/TypeScript/Express/Prisma/MySQL) **não possui nenhum mecanismo de eventos, filas ou notificação externa**. O ciclo de vida do pedido tem máquina de estados controlada e uma transação que atualiza `orders`, insere em `order_status_history` e ajusta estoque (`src/modules/orders/order.service.ts`, método `changeStatus` — [09:04] Bruno). Qualquer solução precisa preservar essa atomicidade: não pode existir status alterado sem evento registrado, nem evento sem status alterado ([09:06] Diego).
+O OMS atual (Node.js/TypeScript/Express/Prisma/MySQL) **não possui nenhum mecanismo de eventos, filas ou notificação externa**. O ciclo de vida do pedido tem máquina de estados controlada e uma transação que atualiza `orders`, insere em `order_status_history` e ajusta estoque (`src/modules/orders/order.service.ts` — transação descrita em [09:04] Bruno; o método `changeStatus` é nomeado em [09:40] Bruno). Qualquer solução precisa preservar essa atomicidade: não pode existir status alterado sem evento registrado, nem evento sem status alterado ([09:06] Diego).
 
 O fluxo é exclusivamente **outbound** — a plataforma notifica os clientes, nunca recebe ([09:02] Marcos, [09:03] Sofia).
 
@@ -33,7 +33,7 @@ flowchart LR
     subgraph Worker["Processo Worker (src/worker.ts)"]
         P["Polling 2s<br/>(batch de pendentes)"] --> OB
         P -->|"POST assinado<br/>HMAC-SHA256, timeout 10s"| C["Endpoint HTTPS<br/>do cliente"]
-        P -->|"5 falhas<br/>(backoff 1m/5m/30m/2h/12h)"| DLQ[("webhook_dead_letter")]
+        P -->|"retentativas esgotadas<br/>(backoff 1m/5m/30m/2h/12h)"| DLQ[("webhook_dead_letter")]
     end
     DLQ -->|"replay manual<br/>(ADMIN)"| OB
 ```
@@ -42,7 +42,7 @@ flowchart LR
 
 2. **Worker separado em polling** — Novo entry-point `src/worker.ts` (script `npm run worker`), mesmo banco e mesma stack, processo independente da API. A cada 2 segundos lê os pendentes mais antigos em batch pequeno (índices em status e `created_at`) e dispara os POSTs. Single-worker nesta fase: ordering garantido apenas por `order_id` ([09:09–09:13] Diego/Larissa). → [ADR-002](adrs/ADR-002-worker-em-processo-separado-com-polling.md)
 
-3. **Resiliência: retry + DLQ** — Timeout de 10s por chamada ([09:42] Diego); em falha, backoff exponencial 1m/5m/30m/2h/12h (janela total ~15h). Após a 5ª falha o evento vai para `webhook_dead_letter` (payload, motivo, timestamp), com replay manual via endpoint restrito a ADMIN e auditado ([09:15–09:18] Diego/Larissa; [09:36] Sofia). → [ADR-003](adrs/ADR-003-retry-com-backoff-exponencial-e-dlq.md)
+3. **Resiliência: retry + DLQ** — Timeout de 10s por chamada ([09:42] Diego); em falha, backoff exponencial 1m/5m/30m/2h/12h (janela total ~15h). Esgotadas as 5 retentativas, o evento vai para `webhook_dead_letter` (payload, motivo, timestamp), com replay manual via endpoint restrito a ADMIN e auditado ([09:15–09:18] Diego/Larissa; [09:36] Sofia). → [ADR-003](adrs/ADR-003-retry-com-backoff-exponencial-e-dlq.md)
 
 4. **Segurança** — Corpo assinado com **HMAC-SHA256** e **secret única por endpoint**, gerada pela plataforma; rotação com grace period de 24h; URL obrigatoriamente HTTPS (validação Zod); headers `X-Signature`, `X-Event-Id`, `X-Timestamp`, `X-Webhook-Id`; payload limitado a 64KB, com erro se ultrapassar ([09:20–09:24] Sofia/Diego/Larissa; [09:44–09:45] Diego/Sofia). → [ADR-004](adrs/ADR-004-hmac-sha256-com-secret-por-endpoint.md)
 

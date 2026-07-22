@@ -12,12 +12,12 @@ Legenda da coluna **Fonte**: `TRANSCRICAO` = a origem é uma fala da reunião; `
 | PRD-FR-02 | docs/PRD.md | Requisito Funcional | Cadastro de webhook (POST) com secret gerada pela plataforma e devolvida na criação | TRANSCRICAO | [09:31] Marcos |
 | PRD-FR-03 | docs/PRD.md | Requisito Funcional | Edição da configuração de webhook existente (PATCH) | TRANSCRICAO | [09:33] Bruno |
 | PRD-FR-04 | docs/PRD.md | Requisito Funcional | Remoção de webhook (DELETE) | TRANSCRICAO | [09:33] Bruno |
-| PRD-FR-05 | docs/PRD.md | Requisito Funcional | Listagem de webhooks por customer (GET); customer_id vem do body/path, não do JWT | TRANSCRICAO | [09:33] Bruno |
+| PRD-FR-05 | docs/PRD.md | Requisito Funcional | Listagem de webhooks por customer (GET); customer_id vem do body/path, não do JWT ([09:32] Larissa) | TRANSCRICAO | [09:33] Bruno |
 | PRD-FR-06 | docs/PRD.md | Requisito Funcional | Filtro por status assinado: endpoint escolhe quais status ouvir (ex.: SHIPPED e DELIVERED) | TRANSCRICAO | [09:33] Marcos |
 | PRD-FR-07 | docs/PRD.md | Requisito Funcional | Histórico das últimas ~100 entregas: sucesso/falha, payload, response, tempo de resposta | TRANSCRICAO | [09:34] Marcos |
 | PRD-FR-08 | docs/PRD.md | Requisito Funcional | Replay manual de DLQ restrito a role ADMIN, com registro de quem executou | TRANSCRICAO | [09:36] Sofia |
 | PRD-FR-09 | docs/PRD.md | Requisito Funcional | Rotação de secret via API com grace period de 24h para a secret antiga | TRANSCRICAO | [09:21] Sofia |
-| PRD-FR-10 | docs/PRD.md | Requisito Funcional | Requisição assinada (HMAC) com headers X-Signature, X-Event-Id, X-Timestamp e X-Webhook-Id | TRANSCRICAO | [09:44] Diego |
+| PRD-FR-10 | docs/PRD.md | Requisito Funcional | Requisição assinada (HMAC) com headers X-Signature, X-Event-Id, X-Timestamp e X-Webhook-Id (este sugerido em [09:44] Sofia) | TRANSCRICAO | [09:44] Diego |
 | PRD-FR-11 | docs/PRD.md | Requisito Funcional | Registro do evento na mesma transação da mudança de status (publicação transacional) | TRANSCRICAO | [09:06] Diego |
 
 ## docs/PRD.md — Requisitos não funcionais
@@ -87,7 +87,7 @@ Legenda da coluna **Fonte**: `TRANSCRICAO` = a origem é uma fala da reunião; `
 | ID | Documento | Tipo | Conteúdo (resumo) | Fonte | Localização |
 |---|---|---|---|---|---|
 | ADR-001 | docs/adrs/ADR-001-padrao-outbox-no-mysql.md | Decisão | Padrão Outbox no MySQL existente: evento inserido na mesma transação da mudança de status | TRANSCRICAO | [09:08] Larissa |
-| ADR-002 | docs/adrs/ADR-002-worker-em-processo-separado-com-polling.md | Decisão | Worker em processo separado (src/worker.ts) com polling da outbox a cada 2 segundos | TRANSCRICAO | [09:10] Larissa |
+| ADR-002 | docs/adrs/ADR-002-worker-em-processo-separado-com-polling.md | Decisão | Worker em processo separado com polling da outbox a cada 2 segundos (src/worker.ts: [09:11] Larissa) | TRANSCRICAO | [09:10] Larissa |
 | ADR-003 | docs/adrs/ADR-003-retry-com-backoff-exponencial-e-dlq.md | Decisão | Retry com backoff exponencial (5 tentativas, 1m/5m/30m/2h/12h) e DLQ em tabela separada | TRANSCRICAO | [09:17] Larissa |
 | ADR-004 | docs/adrs/ADR-004-hmac-sha256-com-secret-por-endpoint.md | Decisão | HMAC-SHA256 sobre o corpo, secret única por endpoint, rotação com grace period de 24h | TRANSCRICAO | [09:22] Sofia |
 | ADR-005 | docs/adrs/ADR-005-entrega-at-least-once-com-x-event-id.md | Decisão | Entrega at-least-once com deduplicação pelo cliente via header X-Event-Id | TRANSCRICAO | [09:26] Larissa |
@@ -116,9 +116,9 @@ Legenda da coluna **Fonte**: `TRANSCRICAO` = a origem é uma fala da reunião; `
 | FDD-ERR-03 | docs/FDD.md | Erro | WEBHOOK_SECRET_REQUIRED (400) — invariante de secret; código citado literalmente na reunião | TRANSCRICAO | [09:28] Bruno |
 | FDD-ERR-04 | docs/FDD.md | Erro | WEBHOOK_PAYLOAD_TOO_LARGE — payload > 64KB gera erro no worker, não trunca nem envia | TRANSCRICAO | [09:24] Larissa |
 | FDD-ERR-05 | docs/FDD.md | Erro | WEBHOOK_ENDPOINT_INACTIVE (409) — derivado do padrão de subclasses ConflictError existente | CODIGO | src/shared/errors/http-errors.ts |
-| FDD-ERR-06 | docs/FDD.md | Erro | WEBHOOK_DEAD_LETTER_NOT_FOUND (404) — replay de id inexistente na DLQ | TRANSCRICAO | [09:35] Diego |
+| FDD-ERR-06 | docs/FDD.md | Erro | WEBHOOK_DEAD_LETTER_NOT_FOUND (404) — replay de id inexistente na DLQ (nome do código derivado; cenário da fala) | TRANSCRICAO | [09:35] Diego |
 | FDD-ERR-07 | docs/FDD.md | Erro | WEBHOOK_CUSTOMER_NOT_FOUND (404) — análogo ao NotFoundError('Customer') do OrderService.create | CODIGO | src/modules/orders/order.service.ts |
-| FDD-ERR-08 | docs/FDD.md | Erro | WEBHOOK_DELIVERY_TIMEOUT (interno) — cliente não respondeu em 10s; conta como falha | TRANSCRICAO | [09:42] Diego |
+| FDD-ERR-08 | docs/FDD.md | Erro | WEBHOOK_DELIVERY_TIMEOUT (interno) — cliente não respondeu em 10s; conta como falha (nome do código derivado) | TRANSCRICAO | [09:42] Diego |
 
 ## docs/FDD.md — Fluxos
 

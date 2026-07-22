@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Status | Aceito |
-| Data | Quinta-feira (conforme cabeçalho da transcrição; dia de calendário não registrado) |
+| Data | Quinta-feira, 09:00 (conforme cabeçalho da transcrição; data calendário não registrada) |
 | Decisores | Larissa (Tech Lead), Diego (Eng. Sênior Plataforma), Bruno (Eng. Pleno Pedidos), Sofia (Segurança — controle de acesso do replay), Marcos (PM — validou a janela) |
 
 ## Contexto

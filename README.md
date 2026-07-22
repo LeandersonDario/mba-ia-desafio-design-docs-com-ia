@@ -110,7 +110,9 @@ Os principais momentos em que a saída precisou de correção (registrados duran
 5. **Data da reunião não inventada.** O cabeçalho da transcrição registra apenas "quinta-feira, 09:00", sem data de calendário. A primeira tentação (minha e dos agentes) era datar os documentos; a versão final declara explicitamente "data de calendário não registrada" em todos os metadados.
 6. **Validação mecânica como rede de segurança.** Após cada lote, um script shell conferiu todos os timestamps e caminhos citados. Foi ele que separou os 4 caminhos de teste *propostos* (`tests/webhook*.test.ts`) dos reais — confirmando que o FDD os apresentava corretamente como "suíte nova" e não como arquivo existente.
 
-No total, foram 4 ciclos principais de geração → revisão crítica → correção (exploração/context pack → ADRs → RFC/FDD/PRD → Tracker/validação), além dos ajustes pontuais acima.
+7. **Rodada final de revisão por 4 agentes paralelos.** Após a entrega inicial, 4 agentes revisores independentes (PRD; RFC+ADRs; FDD; Tracker+README+consistência) verificaram cada critério de aceite com evidência. O achado mais relevante: o **pseudocódigo do retry no FDD §5.3 contradizia a decisão da reunião** — como escrito, movia o evento para a DLQ na 5ª falha sem nunca usar o delay de 12h, entregando ~2h36 de janela em vez das ~15h de `[09:17] Diego` ("quase 15 horas entre primeira falha e última tentativa"). Corrigido: as "5 tentativas" são as 5 retentativas agendadas com os 5 delays, e a DLQ só recebe o evento quando a retentativa das 12h também falha. A revisão também apontou ajustes menores aplicados em lote (âncora do `changeStatus` no RFC, âncoras secundárias no Tracker, alegação de "única alteração em código" no FDD que o próprio documento contradizia).
+
+No total, foram 5 ciclos principais de geração → revisão crítica → correção (exploração/context pack → ADRs → RFC/FDD/PRD → Tracker/validação → revisão final por agentes), além dos ajustes pontuais acima.
 
 ## Como navegar a entrega
 
